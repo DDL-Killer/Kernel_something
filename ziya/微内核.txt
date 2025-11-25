@@ -1,0 +1,47 @@
+Linux下：nasm、att
+nasm
+    .asm
+    nasm
+att
+    .s
+    ar
+
+
+boot 
+    汇编：二进制文件
+---------
+setup   loader
+OS kernel
+    汇编
+    .o elf
+
+1. 注意：boot的汇编跟写内核时用到的回报，意义是不一样的
+    boot 二进制文件  没有调试符号
+    写内核时  .o 有调试符号 链接到内核中
+
+
+1、结构
+
+ORG
+    指定相对位置
+
+    物理地址
+
+    后面的值要跟你这个程序在内存中的地址一致
+
+section、segment
+
+    .text  //代码段
+    .bss  //
+    .data  //数据段
+    .gbt
+
+BITS
+    以什么位编译
+
+global
+    全局
+    开始用：_start
+
+2、BIOS中断->屏幕输出
+3、其他伪指令

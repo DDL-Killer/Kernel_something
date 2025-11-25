@@ -1,0 +1,23 @@
+全局变量error
+    头文件error.h中包含对error全局变量的外部声明和各种错误号的宏定义
+
+#include<string.h>
+
+char *strerror(int errnum);
+
+功能:返回错误编号对应的描述错误的字符串
+
+参数:errnum:错误的编号
+
+返回值:
+    找不到 Unknown error nnn
+    找到 返回错误字符串首地址
+
+通过标准错误输出显示最近一次函数调用的错误信息
+void perror(const char* s);
+
+功能:输出最近一次函数调用的错误信息
+
+参数:s 用户自定义的字符串
+
+返回值:该函数不返回

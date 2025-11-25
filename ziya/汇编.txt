@@ -1,0 +1,74 @@
+1. 熟练学出函数：无参无返回值，无参有返回值，有参有返回值
+2. 声明变量：全局变量、局部变量
+3. 实现运算：基本运算、位运算
+4. 熟练实现条件判断
+5. 熟练实现循环结构
+---
+为什么要学汇编？
+硬件：cpu的检测、开头一定要用汇编
+逆向：反推c语言逻辑，猜测数据结构
+运行时的堆栈图
+---
+cpu架构、指令集、汇编、硬编码的关系
+
+cpu架构
+1. CISC（复杂指令集）
+    1. intel
+2. RISC（精简指令集）
+    1. arm
+
+机器码与指令集
+---
+MASM、NASM、ATT、ARM
+
+哪些因素影响汇编
+OS
+    鸿蒙硬件相同
+    相通：
+        pe文件结构
+            .exe
+            .dll
+            .lib
+        elf文件结构
+            .so
+            .a
+
+        pe loader
+
+        鸿蒙
+        apk
+
+    cpu架构
+        intel
+        arm
+    
+---
+
+MASU（大小写敏感）、NAST（不敏感）
+
+vs 
+
+
+byte 1B db
+word 2B dw
+dword 4B dword
+qword 8B dq
+
+ATT linux
+
+gcc
+as
+
+int a 1 
+
+---
+
+寄存器
+1. 通用寄存器
+2. 段寄存器
+3. 指令寄存器（x86 EIP x64 RIP）
+4. 标准寄存器（x86 eflags、x64）
+5. 控制寄存器（CR0-CR4,CR3页表）
+6. 调试寄存器（DR0-DR7）
+7. 描述符寄存器（GDTR、LDTR、IDTR）
+8. 任务寄存器（x86 FPU、x64 XMM）

@@ -1,0 +1,56 @@
+intel 架构
+
+32位
+    rdx
+    rcx
+
+
+rax  64位  8B  只有64位有  特殊：函数返回值（默认的）非常重要
+    eax  32位  4B  32位、64位都有
+        ax  16位  2B  16位、32位都有
+            ah  8位  1B  都有
+            al  8位  1B  都有  0-255  -128-127
+
+rax,rbx,rcx，rdx
+
+rcx
+    1、循环次数   256
+    2、this指针（c++）
+        lea [this],a
+
+rsi sourse
+rdi destination
+
+栈指令
+rbp
+rsp
+    push
+    pop
+
+快速调用传参
+
+
+
+int a = 10；
+a+=1;
+
+汇编指令
+
+1. 只用1个寄存器实现
+
+xor eax,eax  //清零
+mov eax,10   //10
+add eax,1    //+1
+
+mov [ebp - 8] ,eax   //写回内存
+
+2. 用多个寄存器实现
+
+xor eax,eax
+xor ebx,ebx
+mov eax,10
+mov ebx,1
+add eax,ebx
+
+nasm：加完放左边
+att：加完放右边

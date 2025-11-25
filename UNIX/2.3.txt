@@ -1,0 +1,60 @@
+动态加载
+
+动态加载
+    在程序进行时,需要使用文件,向动态连接器发出请求
+自动加载
+    执行时,将依赖的动态库文件加载到内存
+
+动态链接器为动态库加载提供了API
+    dlopen()
+    dlclose()
+    dlerror()
+    dlsym()
+
+#include<dlfcn.h>
+
+void *dlopen(const char *filename,int flags);
+
+功能:动态库加载到内存
+
+参数:
+filename:共享库路径
+LD_LIBRARY_PATH:指定的路径下或者默认路径下找
+flags:加载方式,可取以下值
+    RTLD_LAZY 延迟加载,使用时才加载
+    RTLD_NOW 立即加载,已经加载到内存
+返回值:
+    成功:内存地址
+    失败:NULL
+注意:
+    链接时要使用-ldl
+
+int dlclose(void *handle);
+
+功能:关闭动态库,使引用计数减1
+
+参数:
+    handle:动态库加载到内存的地址.dlopen()的返回值
+
+返回值:
+    成功 0
+    失败 非0
+
+char *dlerror(void);
+
+功能:获取dlopen API的错误信息
+返回值
+    返回错误原因字符串的首地址
+    NULL 无错误
+
+void *dlsym(void *handle,const char *symbol);
+
+功能:从动态库中句柄找到符号的地址
+
+参数:
+    handle:动态库加载到内存的地址大学而
+    symbol:符号的名字(函数名、全局变量名、静态局部变量名)
+
+返回值:
+    成功:返回符号的地址
+    失败:NULL
