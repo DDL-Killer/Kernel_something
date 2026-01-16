@@ -1,0 +1,25 @@
+DATA SEGMENT
+    NUM1 DW 10;
+    NUM2 DW 20;
+    NUM3 DW 30;
+    SUM DW ?  ;
+DATA ENDS
+
+CODE SEGMENT
+    ASSUME CS:CODE,DS:DATA;
+
+START:
+    ;
+    MOV AX,DATA
+    MOV DS,AX
+    ;
+    MOV AX,NUM1;
+    ADD AX,NUM2;
+    ADD AX,NUM3;
+    MOV SUM,AX;
+    ;
+    MOV AH,4CH
+    INT 21H
+CODE ENDS
+
+END START
