@@ -104,7 +104,7 @@ void do_ls(const char *path){
         //动态扩容
         if(count >= capacity){
             capacity *= 2;
-            files = (FileInfo *)realloc(files,capacity*sizeof(capacity));
+            files = (FileInfo *)realloc(files,capacity*sizeof(FileInfo));
         }
         //存文件名
         strcpy(files[count].name,entry->d_name);
@@ -191,7 +191,7 @@ int cmp_name(const void *a,const void *b){
     int result = strcmp(fa->name,fb->name);
 
     //解决 -r
-    if(g_flags & FLAG_R){
+    if(g_flags & FLAG_r){
         return -result;
     }
     return result;
