@@ -7,6 +7,8 @@
 #include<sys/types.h>
 #include<sys/stat.h>
 #include<time.h>
+#include<pwd.h>
+#include<grp.h>
 
 typedef struct{
     char name[256];
@@ -14,6 +16,7 @@ typedef struct{
     struct stat info; //
 }FileInfo;
 
+void print_long_format(FileInfo *file);
 //比较函数的声明
 int cmp_name(const void *a,const void *b);
 int cmp_time(const void *a,const void *b);
@@ -129,21 +132,54 @@ void do_ls(const char *path){
         qsort(files,count,sizeof(FileInfo),cmp_name);
     }
 
+    //遍历打印
     for(int i = 0;i < count;i++){
-        //处理 -i (index)
-        if(g_flags & FLAG_i){
-            printf("%lu ",files[i].info.st_ino);
+        // //处理 -i (index)
+        // if(g_flags & FLAG_i){
+        //     printf("%lu ",files[i].info.st_ino);
+        // }
+
+        // //处理 -s (blocks)
+        // //ls -s 显示是KB单位,st_blocks是512字节块,所以 /2
+        // if(g_flags & FLAG_s){
+        //     printf("%4lld ",(long long)files[i].info.st_blocks);
+        // }
+
+        // printf("%s ",files[i].name);
+
+        //如果有-l ,使用长格式打印
+        if(g_flags & FLAG_l){
+            print_long_format(&files[i]);
+        }else{
+            if(g_flags & FLAG_i) printf("%lu ",files[i].info.st_ino); //打印文件节点号(文件的唯一标识)
+            if(g_flags & FLAG_s) printf("%4lld ",(long long)files[i].info.st_blocks/2);
         }
 
-        //处理 -s (blocks)
-        //ls -s 显示是KB单位,st_blocks是512字节块,所以 /2
-        if(g_flags & FLAG_s){
-            printf("%4lld ",(long long)files[i].info.st_blocks);
+        //打印文件名
+        printf("%s",files[i].name);
+        
+        //格式:如果有 -l 则每个文件一行,否则用两个空格隔开
+        if(g_flags & FLAG_l){
+            printf("\n");
+        }else{
+            printf("  ");
         }
-
-        printf("%s ",files[i].name);
     }
-    printf("\n");
+    if(!(g_flags & FLAG_l)) printf("\n");
+
+    //递归-R
+    if(g_flags & FLAG_R){
+        for(int i = 0;i<count;i++){
+            if(S_ISDIR(files[i].info.st_mode)){
+                if(strcmp(files[i].name,".") == 0 || strcmp(files[i].name,"..") == 0){
+                    continue;
+                }
+
+                printf("\n%s:\n",files[i].full_path);
+                do_ls(files[i].full_path);
+            }
+        }
+    }
 
     free(files);
 }
@@ -177,4 +213,49 @@ int cmp_time(const void *a,const void *b){
     }
 
     return (int)result;
+}
+
+//解析并打印文件类型和权限
+void print_permissions(mode_t mode){
+    if(S_ISDIR(mode)) printf("d");
+    else if (S_ISLNK(mode)) printf("l");
+    else if (S_ISCHR(mode)) printf("c");
+    else if (S_ISBLK(mode)) printf("b");
+    else if (S_ISFIFO(mode)) printf("p");
+    else if (S_ISSOCK(mode)) printf("s");
+    else printf("-"); //普通文件
+
+    //打印权限
+    printf("%c%c%c",(mode & S_IRUSR)? 'r':'-',(mode & S_IWUSR)?'w':'-',(mode & S_IXUSR)? 'x':'-');
+    printf("%c%c%c",(mode & S_IRGRP)? 'r':'-',(mode & S_IWGRP)?'w':'-',(mode & S_IXGRP)? 'x':'-');
+    printf("%c%c%c",(mode & S_IROTH)? 'r':'-',(mode & S_IWOTH)?'w':'-',(mode & S_IXOTH)? 'x':'-');
+}
+
+//处理 -l 参数时的单行输出
+void print_long_format(FileInfo *file){
+    //打印 inode 和 blocks 
+    if(g_flags & FLAG_i) printf("%lu ",file->info.st_ino);
+    if(g_flags & FLAG_s) printf("%4lld ",(long long)file->info.st_blocks/2);
+
+    //打印权限
+    print_permissions(file->info.st_mode);
+
+    //打印硬链接数
+    printf(" %lu ",file->info.st_nlink);
+
+    //打印用户名和组名
+    struct passwd *pw = getpwuid(file->info.st_uid);
+    struct group *gr = getgrgid(file->info.st_gid);
+    printf("%s %s ",pw?pw->pw_name:"unknown",gr?gr->gr_name:"unknown");
+
+    //打印文件大小
+    printf("%8lld ",(long long)file->info.st_size);
+
+    //打印修改时间
+    struct tm *t = localtime(&file->info.st_mtime);
+    char time_buf[64];
+
+    //格式化为"月 日 时:分"
+    strftime(time_buf,sizeof(time_buf),"%b %e %H:%M",t);
+    printf("%s ",time_buf);
 }
