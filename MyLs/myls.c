@@ -155,8 +155,14 @@ void do_ls(const char *path){
             if(g_flags & FLAG_s) printf("%4lld ",(long long)files[i].info.st_blocks/2);
         }
 
-        //打印文件名
-        printf("%s",files[i].name);
+        //带颜色打印文件名
+        if(S_ISDIR(files[i].info.st_mode)){
+            printf("\033[1;34m%s\033[0m",files[i].name); //蓝色表示目录
+        }else if(files[i].info.st_mode & S_IXUSR){
+            printf("\033[1;32m%s\033[0m",files[i].name); //绿色可执行
+        }else{
+            printf("%s",files[i].name);
+        }
         
         //格式:如果有 -l 则每个文件一行,否则用两个空格隔开
         if(g_flags & FLAG_l){
