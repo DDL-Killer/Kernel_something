@@ -9,9 +9,20 @@
 #define MAX_CMD_LEN 1024
 #define MAX_ARGS 64
 
+//解决重定向输出到终端后没有换行直接打印终端信息
+//使用全局变量
+int g_need_newline = 0;
+
 //循环函数打印shell信息
 void print_prompt(){
     char cwd[1024];
+
+    //判断是不是要换行
+    if(g_need_newline){
+        printf("\n");
+        g_need_newline = 0;//重置
+    }
+
     if(getcwd(cwd,sizeof(cwd))!=NULL){
         printf("\033[1;32mlyh@super-shell\033[0m:\033[1;34m%s\033[0m$ ",cwd);
     }else{
@@ -36,7 +47,8 @@ void parse_command(char *input,char **args){
 }
 
 //进程分裂,用fork()克隆一个子进程,让shell主进程等待,子进程替换为命令执行
-void execute_external_command(char **args){
+//增加is_background参数
+void execute_external_command(char **args,int is_background){
     pid_t pid= fork();
 
     if(pid < 0){
@@ -91,8 +103,12 @@ void execute_external_command(char **args){
         }
     }else{
         //父进程
-        int status;
-        waitpid(pid,&status,0);//阻塞等待子进程结束
+        if(is_background){
+            printf("[Process running in background,PID: %d]\n",pid);
+        }else{
+            int status;
+            waitpid(pid,&status,0);//阻塞等待子进程结束
+        }
     }
 }
 
@@ -210,11 +226,21 @@ int main(){
 
         //尝试内部指令执行
         if(execute_builtin(args)){
+            //内部命令执行后,标记需要换行
+            //排除 cd -
+            if(!(strcmp(args[0],"cd")==0 && strcmp(args[1],"-")==0)){
+                g_need_newline = 1;
+            }
             continue;
         }
 
         //外部指令执行
-        execute_external_command(args);
+        execute_external_command(args,is_background);
+
+        //如果是前台进程,设置换行,后台进程不影响
+        if(!is_background){
+            g_need_newline = 1;
+        }
     }
     return 0;
 }
