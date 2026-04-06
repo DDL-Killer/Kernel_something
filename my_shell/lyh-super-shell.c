@@ -4,6 +4,7 @@
 #include<unistd.h>
 #include<sys/wait.h>
 #include<signal.h>
+#include<fcntl.h>
 
 #define MAX_CMD_LEN 1024
 #define MAX_ARGS 64
@@ -41,6 +42,47 @@ void execute_external_command(char **args){
     if(pid < 0){
         perror("fork failed");
     }else if(pid == 0){
+        //解决重定向
+        int fd;
+
+        //遍历寻找重定向符号
+        for(int i = 0;args[i]!=NULL;i++){
+
+            //处理输出覆盖重定向 " > "
+            if(strcmp(args[i],">") == 0){
+                //O_CREAT:不存在就创建 O_WRONLY:只写 O_TRUNC:存在就清空 0644:读写 读 读
+                fd = open(args[i+1],O_CREAT|O_WRONLY|O_TRUNC,0644);
+                if(fd<0) {perror("open >");exit(1);}
+
+                dup2(fd,STDOUT_FILENO);//标准输出
+                close(fd);
+
+                args[i] = NULL;//截断命令行,不让execvp获取>之后的内容
+                break;
+            }
+            //处理输出追加重定向 " >> "
+            else if(strcmp(args[i],">>") == 0){
+                //O_APPEND:追加
+                fd = open(args[i+1],O_CREAT|O_WRONLY|O_APPEND,0644);
+                if(fd<0) {perror("open >>");exit(1);}
+
+                dup2(fd,STDOUT_FILENO);
+                close(fd);
+                args[i] = NULL;
+                break;
+            }
+            //处理输入重定向 " < "
+            else if(strcmp(args[i],"<") == 0){
+                //O_RDONLY:只读
+                fd = open(args[i+1],O_RDONLY);
+                if(fd<0) {perror("open <");exit(1);}
+
+                dup2(fd,STDIN_FILENO);
+                close(fd);
+                args[i] = NULL;
+                break;
+            }
+        }
         //子进程
         //execvp 会在环境变量PATH中寻找args[0]
         if(execvp(args[0],args) == -1){
@@ -117,10 +159,23 @@ int execute_builtin(char **args){
     return 0;
 }
 
+//子进程死掉的,父进程如果不去用wait回收,就变成僵尸进程,占用系统进程表
+//在子进程死亡,内核给父进程发送SIGCHLD信号
+void handle_sigchld(int sig){
+    //WNOHANG 非阻塞,如果没有僵尸进程,立即返回
+    //使用while防止同时死去多个子进程
+    while(waitpid(-1,NULL,WNOHANG)>0){
+        //静默回收
+    }
+}
+
 //信号处理:屏蔽 ctrl+c
 int main(){
     char input[MAX_CMD_LEN];
     char *args[MAX_ARGS];
+
+    //解决僵尸进程
+    signal(SIGCHLD,handle_sigchld);
 
     //忽略ctrl+c
     signal(SIGINT,SIG_IGN);
@@ -129,7 +184,7 @@ int main(){
         print_prompt();
 
         if(fgets(input,sizeof(input),stdin) == NULL){
-            printf("\n");  //处理Crul+D
+            printf("\n");  //处理Ctrl+D
             break;
         }
 
@@ -138,6 +193,19 @@ int main(){
         //如果回车,跳过
         if(args[0] == NULL){
             continue;
+        }
+
+
+        //在执行命令前,检查args数组的最后一个有效元素是不是&
+        //如果是,删除设置为NULL,并立一个is_background = 1的标志
+        int is_background = 0;
+        int i = 1;
+        //找到最后一个命令块是第几个命令块
+        while(args[i] != NULL) i++;
+        //如果倒数第二个(也就是输入命令块的最后一个,因为parse_command()最后一个while()会i++,然后把这个新的i++变成了NULL)
+        if(i > 0 && strcmp(args[i-1],"&") == 0 ){
+            is_background = 1;
+            args[i-1] = NULL;
         }
 
         //尝试内部指令执行
