@@ -98,14 +98,14 @@ void execute_external_command(char **args,int is_background){
         //解决重定向
         //抽离后直接调用
         handle_redirection(args);
-        }
+        
         //子进程
         //execvp 会在环境变量PATH中寻找args[0]
         if(execvp(args[0],args) == -1){
             perror("Command not found");
             exit(EXIT_FAILURE);//如果命令为空,子进程自杀
         }
-    else{
+    }else{
         //父进程
         if(is_background){
             printf("[Process running in background,PID: %d]\n",pid);

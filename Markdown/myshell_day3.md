@@ -184,3 +184,19 @@ pipe(fd);
     │                           │                           │
 ```
 
+## strchr()
+
+```c
+#include <string.h>
+char *strchr(const char *s, int c);
+```
+
+在字符串s中查询c第一次出现的位置
+
+
+
+* 返回值:
+
+  	* 成功:返回指向第一次出现位置的指针
+
+  	* 失败:返回NULL
