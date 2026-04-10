@@ -1,6 +1,6 @@
 # 目标
 
-理解`pthread`库的基本用法,理解并发核心思想:任务分解和结果合并
+理解`pthread`库的基本用法,理解并发核心思想:任务分解和结果合并,实现多线程排序
 
 ## pthread
 
@@ -17,15 +17,12 @@
 | `pthread_detach` | 分离线程       | 常用     |
 | `pthread_cancel` | 取消线程       | 进阶     |
 
-### 创建线程
+### pthread_create()  创建线程
 
 ```c
 #include <pthread.h>
 
-int pthread_create(pthread_t *thread,
-                   const pthread_attr_t *attr,
-                   void *(*start_routine)(void*),
-                   void *arg);
+int pthread_create(pthread_t *thread,const pthread_attr_t *attr,void *(*start_routine)(void*),void *arg);
 ```
 
 #### 参数详解
@@ -51,7 +48,7 @@ void* my_thread_func(void* arg) {
 }
 ```
 
-### 等待线程
+### pthread_join()  等待线程
 
 ```c
 int pthread_join(pthread_t thread, void **retval);
@@ -76,7 +73,7 @@ int pthread_join(pthread_t thread, void **retval);
 - **EINVAL**：线程不可join（已经被分离过）
 - **EDEADLK**：死锁（自己等自己）
 
-### 结束线程
+### pthread_exit()  结束线程
 
 ```c
 void pthread_exit(void *retval);
@@ -95,13 +92,13 @@ void pthread_exit(void *retval);
 | 主线程 `return`       | 整个进程结束，所有线程被强制终止 |
 | 主线程 `pthread_exit` | 主线程结束，其他线程继续运行     |
 
-### 获取线程ID
+### pthread_self()  获取线程ID
 
 ```c
 pthread_t pthread_self(void);
 ```
 
-### 分离线程
+### pthread_detach()  分离线程
 
 ```c
 int pthread_detach(pthread_t thread);
@@ -119,6 +116,8 @@ int pthread_detach(pthread_t thread);
 | ---------------- | --------------------- | ------------------- | -------------------- |
 | **可 join 线程** | 默认                  | `pthread_join` 等待 | 需要获取返回值       |
 | **分离线程**     | 调用 `pthread_detach` | 自动回收            | 后台任务，不需要等待 |
+
+### 编译时末尾要加 `-lpthread`
 
 ## 两路归并算法
 
