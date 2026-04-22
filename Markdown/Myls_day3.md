@@ -22,11 +22,11 @@ int stat(const char *pathname,struct stat *statbuf);
 ## `lstat()`
 
 ```c
-#include<sys/types.h>
-#include<sys/stat.h>
-#inlude<unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
-int stat(const char *pathname,struct stat *statbuf);
+int lstat(const char *pathname, struct stat *statbuf);
 ```
 
 * 如果 `pathname` 是一个符号链接，`lstat()` **不会追踪**链接，它返回的是**符号链接文件本身**的信息。
